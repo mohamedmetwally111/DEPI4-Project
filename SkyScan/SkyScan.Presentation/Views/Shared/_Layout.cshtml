@@ -1,0 +1,288 @@
+@inject SkyScan.Presentation.Services.ILanguageService Lang
+<!DOCTYPE html>
+<html class="dark" lang="@Lang.CurrentLanguage" dir="ltr">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - SkyScan Celestial</title>
+    <link rel="icon" type="image/png" href="https://lh3.googleusercontent.com/aida-public/AB6AXuDE3YoV-bTiqbWTeJ5H9ZF2xASvIl5pQvAFUdV7bL55V12L4dN4XEyRIVXFwZtR2g_vU7STh65kAHVvr9Q7zJiexI8ZwwfUvBDXLdgzEBdnjMDLMiG1inSnqltW_N7vSXX48JjoP7lT4NpRt6KTiJ6dPPBNf8Gl7mEyMBiEIbLf8kbZKT3T9dEx7CwRyl8W4DZcqXFchICzuoza_A2IXwkyBIp9tffc9wpL1gi1sE-cPjK71kDv28DSgFeXtwHG9f8tPUGOpkQUsQ" />
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Inter:wght@300;400;500;600;700&family=Manrope:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
+    <script>
+        // Immediately apply saved theme to avoid flash
+        (function () {
+            const savedTheme = localStorage.getItem('theme') || 'dark';
+            if (savedTheme === 'light') {
+                document.documentElement.classList.remove('dark');
+                document.documentElement.classList.add('light');
+            } else {
+                document.documentElement.classList.remove('light');
+                document.documentElement.classList.add('dark');
+            }
+        })();
+    </script>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "background": "rgb(var(--background-rgb) / <alpha-value>)",
+                        "surface": "rgb(var(--surface-rgb) / <alpha-value>)",
+                        "accent": "rgb(var(--accent-rgb) / <alpha-value>)",
+                        "bronze": "#8A5A2B",
+                        "text-light": "rgb(var(--text-light-rgb) / <alpha-value>)",
+                        "text-muted": "rgb(var(--text-muted-rgb) / <alpha-value>)",
+                        "border-light": "var(--border-light)",
+                        "glass": "var(--glass)",
+                        "primary": "rgb(var(--accent-rgb) / <alpha-value>)",
+                        "on-primary": "rgb(var(--background-rgb) / <alpha-value>)",
+                        "tertiary": "rgb(var(--accent-rgb) / <alpha-value>)",
+                        "on-surface": "rgb(var(--text-light-rgb) / <alpha-value>)",
+                        "on-surface-variant": "rgb(var(--text-muted-rgb) / <alpha-value>)",
+                        "surface-container-low": "rgb(var(--surface-rgb) / <alpha-value>)",
+                        "outline-variant": "var(--outline-variant)",
+                        "outline": "var(--outline)"
+                    },
+                    "fontFamily": {
+                        "serif": ["Playfair Display", "serif"],
+                        "sans": ["Inter", "sans-serif"],
+                        "manrope": ["Manrope", "sans-serif"]
+                    }
+                },
+            },
+        }
+    </script>
+    <style>
+        :root {
+            /* Theme RGB values for Tailwind opacity modifiers */
+            --background-rgb: 5 5 5;
+            --surface-rgb: 17 17 17;
+            --accent-rgb: 216 180 106;
+            --text-light-rgb: 248 248 248;
+            --text-muted-rgb: 185 185 185;
+            
+            --border-light: rgba(255, 255, 255, 0.08);
+            --glass: rgba(255, 255, 255, 0.05);
+            --outline-variant: rgba(255, 255, 255, 0.08);
+            --outline: rgba(255, 255, 255, 0.1);
+            
+            --glass-bg: rgba(255, 255, 255, 0.03);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --date-scheme: dark;
+        }
+
+        html.light {
+            --background-rgb: 252 249 248; /* #fcf9f8 (Aurelian Minimalist Bone White Background) */
+            --surface-rgb: 255 255 255; /* #ffffff (surface-container-lowest) */
+            --accent-rgb: 118 90 25; /* #765a19 (Primary Luxury Gold/Bronze) */
+            --text-light-rgb: 28 27 27; /* #1c1b1b (on-background Charcoal) */
+            --text-muted-rgb: 77 70 57; /* #4d4639 (on-surface-variant Warm Slate) */
+            
+            --border-light: rgba(208, 197, 180, 0.35); /* #d0c5b4 (outline-variant) at 35% opacity */
+            --glass: rgba(252, 249, 248, 0.75); /* Tonal layer glass */
+            --outline-variant: rgba(208, 197, 180, 0.35);
+            --outline: rgba(127, 118, 103, 0.25); /* #7f7667 (outline) at 25% opacity */
+            
+            --glass-bg: rgba(255, 255, 255, 0.85);
+            --glass-border: rgba(208, 197, 180, 0.3);
+            --date-scheme: light;
+        }
+
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24; }
+        .glass-panel { background: var(--glass-bg); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid var(--glass-border); }
+        .atmospheric-layer { background: linear-gradient(180deg, rgba(var(--background-rgb), 0) 0%, rgba(var(--background-rgb), 0.95) 100%); }
+        body { background-color: rgb(var(--background-rgb)); color: rgb(var(--text-light-rgb)); font-family: 'Inter', sans-serif; transition: background-color 0.3s ease, color 0.3s ease; }
+        
+        input[type="date"] {
+            color-scheme: var(--date-scheme);
+        }
+
+        @@keyframes rotate-360 {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        .rotate-animation {
+            animation: rotate-360 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Arabic text direction and alignment overrides (keeps layout, boxes, and icons LTR) */
+        html[lang="ar"] p, 
+        html[lang="ar"] h1, 
+        html[lang="ar"] h2, 
+        html[lang="ar"] h3, 
+        html[lang="ar"] h4, 
+        html[lang="ar"] h5, 
+        html[lang="ar"] h6, 
+        html[lang="ar"] span, 
+        html[lang="ar"] label, 
+        html[lang="ar"] input, 
+        html[lang="ar"] select, 
+        html[lang="ar"] option,
+        html[lang="ar"] textarea,
+        html[lang="ar"] header,
+        html[lang="ar"] .text-left {
+            text-align: right !important;
+            direction: rtl;
+        }
+        
+        html[lang="ar"] input::placeholder {
+            text-align: right;
+            direction: rtl;
+        }
+    </style>
+</head>
+<body class="bg-background text-text-light font-sans selection:bg-accent selection:text-background">
+    <!-- Top Navigation -->
+    <nav class="fixed top-0 w-full z-50 bg-background/40 backdrop-blur-md border-b border-border-light">
+        <div class="flex justify-between items-center px-12 py-6 w-full max-w-screen-2xl mx-auto h-20">
+            <a asp-controller="Flight" asp-action="Index" class="flex items-center gap-3 hover:opacity-90 transition-opacity">
+                <img alt="SkyScan Logo" class="w-8 h-8 object-contain filter brightness-[1.2]" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDE3YoV-bTiqbWTeJ5H9ZF2xASvIl5pQvAFUdV7bL55V12L4dN4XEyRIVXFwZtR2g_vU7STh65kAHVvr9Q7zJiexI8ZwwfUvBDXLdgzEBdnjMDLMiG1inSnqltW_N7vSXX48JjoP7lT4NpRt6KTiJ6dPPBNf8Gl7mEyMBiEIbLf8kbZKT3T9dEx7CwRyl8W4DZcqXFchICzuoza_A2IXwkyBIp9tffc9wpL1gi1sE-cPjK71kDv28DSgFeXtwHG9f8tPUGOpkQUsQ" />
+                <div class="text-2xl font-black tracking-tight text-accent font-serif">SkyScan</div>
+            </a>
+            <div class="hidden md:flex items-center gap-10 font-manrope tracking-[0.05em] font-medium text-[11px] uppercase">
+                <a class="text-text-muted hover:text-accent transition-colors duration-300" asp-controller="Flight" asp-action="Index">@Lang.T("Flights")</a>
+                <a class="text-text-muted hover:text-accent transition-colors duration-300" asp-controller="Booking" asp-action="MyBookings">@Lang.T("Bookings")</a>
+                @if (User.Identity != null && User.Identity.IsAuthenticated)
+                {
+                    <a class="text-text-muted hover:text-accent transition-colors duration-300" asp-controller="Account" asp-action="Profile">@Lang.T("Profile")</a>
+                }
+            </div>
+            <div class="flex items-center gap-6">
+                @{
+                    var selectedCurrency = Context.Request.Cookies["SelectedCurrency"] ?? "USD";
+                }
+                <div class="flex items-center gap-2">
+                    <!-- Currency Switcher Dropdown -->
+                    <div class="relative group">
+                        <button class="flex items-center gap-1 bg-surface border border-outline hover:border-accent/40 text-text-light hover:text-accent py-2 px-4 rounded-full text-[10px] uppercase tracking-wider transition-all" title="@Lang.T("Select Currency")">
+                            <span class="material-symbols-outlined text-sm">payments</span>
+                            <span>@selectedCurrency</span>
+                        </button>
+                        <div class="absolute ltr:right-0 rtl:left-0 top-full pt-2 w-28 opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-all duration-300 z-50">
+                            <div class="bg-surface border border-outline rounded-xl shadow-lg py-1">
+                                <a href="/Currency/Set?code=USD" class="block px-4 py-2 text-[10px] text-text-light hover:bg-glass hover:text-accent transition-all">USD ($)</a>
+                                <a href="/Currency/Set?code=EGP" class="block px-4 py-2 text-[10px] text-text-light hover:bg-glass hover:text-accent transition-all">EGP (E£)</a>
+                                <a href="/Currency/Set?code=EUR" class="block px-4 py-2 text-[10px] text-text-light hover:bg-glass hover:text-accent transition-all">EUR (€)</a>
+                                <a href="/Currency/Set?code=GBP" class="block px-4 py-2 text-[10px] text-text-light hover:bg-glass hover:text-accent transition-all">GBP (£)</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Theme & Language Toggles -->
+                <div class="flex items-center gap-2">
+                    <!-- Theme Toggle -->
+                    <button id="themeToggle" class="flex items-center justify-center w-8 h-8 rounded-full bg-surface border border-outline hover:border-accent/40 text-text-light hover:text-accent transition-all duration-300" title="Toggle Theme">
+                        <span id="themeToggleIcon" class="material-symbols-outlined text-sm">dark_mode</span>
+                    </button>
+
+                    <!-- Language Switcher -->
+                    @{
+                        // Must be percent-encoded: Context.Request.QueryString can itself contain
+                        // '&'/'='/'?' (e.g. on the search Results page). Concatenating it into
+                        // another URL's query string unescaped truncates returnUrl at the first
+                        // '&', silently dropping params like destination/date on redirect back.
+                        var currentUrl = $"{Context.Request.Path}{Context.Request.QueryString}";
+                        var encodedReturnUrl = Uri.EscapeDataString(currentUrl);
+                    }
+                    <div class="relative group">
+                        <button class="flex items-center gap-1 bg-surface border border-outline hover:border-accent/40 text-text-light hover:text-accent py-2 px-4 rounded-full text-[10px] uppercase tracking-wider transition-all" title="Select Language">
+                            <span class="material-symbols-outlined text-sm">language</span>
+                            <span>@(Lang.CurrentLanguage == "ar" ? "AR" : "EN")</span>
+                        </button>
+                        <div class="absolute ltr:right-0 rtl:left-0 top-full pt-2 w-24 opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-all duration-300 z-50">
+                            <div class="bg-surface border border-outline rounded-xl shadow-lg py-1">
+                                <a href="/Language/Set?culture=en&returnUrl=@encodedReturnUrl" class="block px-4 py-2 text-[10px] text-text-light hover:bg-glass hover:text-accent transition-all">English</a>
+                                <a href="/Language/Set?culture=ar&returnUrl=@encodedReturnUrl" class="block px-4 py-2 text-[10px] text-text-light hover:bg-glass hover:text-accent transition-all">العربية</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-4">
+                    @if (User.Identity != null && User.Identity.IsAuthenticated)
+                    {
+                        <form asp-controller="Account" asp-action="Logout" method="post" class="inline">
+                            <button type="submit" class="hover:text-accent transition-all duration-300 flex items-center gap-1" title="Sign Out">
+                                <span class="material-symbols-outlined text-text-light text-xl">logout</span>
+                            </button>
+                        </form>
+                    }
+                    else
+                    {
+                        <a asp-controller="Account" asp-action="Login" class="bg-accent text-background hover:bg-text-light hover:text-background transition-all font-bold py-2 px-6 rounded-full text-[10px] uppercase tracking-wider" title="Sign In">
+                            @Lang.T("Sign In")
+                        </a>
+                    }
+                </div>
+            </div>
+        </div>
+    </nav>
+ 
+    @RenderBody()
+ 
+    <!-- Footer -->
+    <footer class="bg-background w-full py-16 border-t border-border-light">
+        <div class="flex flex-col md:flex-row justify-between items-center px-12 space-y-8 md:space-y-0 max-w-screen-2xl mx-auto">
+            <div class="flex flex-col items-center md:items-start gap-2">
+                <div class="flex items-center gap-3">
+                    <img alt="SkyScan Logo" class="w-6 h-6 object-contain opacity-60 filter brightness-[1.2]" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDE3YoV-bTiqbWTeJ5H9ZF2xASvIl5pQvAFUdV7bL55V12L4dN4XEyRIVXFwZtR2g_vU7STh65kAHVvr9Q7zJiexI8ZwwfUvBDXLdgzEBdnjMDLMiG1inSnqltW_N7vSXX48JjoP7lT4NpRt6KTiJ6dPPBNf8Gl7mEyMBiEIbLf8kbZKT3T9dEx7CwRyl8W4DZcqXFchICzuoza_A2IXwkyBIp9tffc9wpL1gi1sE-cPjK71kDv28DSgFeXtwHG9f8tPUGOpkQUsQ" />
+                    <span class="font-serif font-bold text-accent text-lg">SkyScan</span>
+                </div>
+                <div class="font-sans text-[10px] uppercase tracking-[0.2em] leading-relaxed text-text-muted/40">
+                    @Lang.T("© 2026 SkyScan luxury aviation. All rights reserved.")
+                </div>
+            </div>
+            <div class="flex gap-10 font-sans text-[10px] uppercase tracking-[0.2em] leading-relaxed">
+                <a class="text-text-muted/60 hover:text-accent transition-colors" asp-controller="Home" asp-action="Privacy">@Lang.T("Privacy Policy")</a>
+                <a class="text-text-muted/60 hover:text-accent transition-colors" href="#">@Lang.T("Terms of Service")</a>
+                <a class="text-text-muted/60 hover:text-accent transition-colors" href="#">@Lang.T("Luxury Partners")</a>
+                <a class="text-text-muted/60 hover:text-accent transition-colors" href="#">@Lang.T("Support")</a>
+            </div>
+            <div class="flex items-center gap-4">
+                <span class="material-symbols-outlined text-text-muted/40 text-xl cursor-pointer hover:text-accent">language</span>
+                <span class="text-accent/80 font-sans text-[10px] uppercase tracking-[0.2em] font-bold">@Lang.T("Global Access")</span>
+            </div>
+        </div>
+    </footer>
+
+    @await RenderSectionAsync("Scripts", required: false)
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const themeToggle = document.getElementById('themeToggle');
+            const themeToggleIcon = document.getElementById('themeToggleIcon');
+            
+            // Set initial icon based on current theme class
+            function updateIcon() {
+                if (document.documentElement.classList.contains('light')) {
+                    themeToggleIcon.textContent = 'light_mode';
+                } else {
+                    themeToggleIcon.textContent = 'dark_mode';
+                }
+            }
+            
+            updateIcon();
+            
+            themeToggle.addEventListener('click', () => {
+                // Add rotation animation
+                themeToggleIcon.classList.add('rotate-animation');
+                setTimeout(() => themeToggleIcon.classList.remove('rotate-animation'), 500);
+                
+                if (document.documentElement.classList.contains('light')) {
+                    document.documentElement.classList.remove('light');
+                    document.documentElement.classList.add('dark');
+                    localStorage.setItem('theme', 'dark');
+                } else {
+                    document.documentElement.classList.remove('dark');
+                    document.documentElement.classList.add('light');
+                    localStorage.setItem('theme', 'light');
+                }
+                updateIcon();
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,347 @@
+@model SkyScan.Application.Account.GetUserProfile.UserProfileResult
+@inject SkyScan.Presentation.Services.ILanguageService Lang
+@inject SkyScan.Application.Interfaces.ICurrencyConversionService CurrencyService
+@{
+    ViewData["Title"] = Lang.T("Your SkyScan Profile");
+    Layout = "_Layout";
+    var currency = Context.Request.Cookies["SelectedCurrency"] ?? "USD";
+    var symbol = await CurrencyService.GetCurrencySymbolAsync(currency);
+}
+
+<main class="pt-32 pb-24 px-6 md:px-12 atmospheric-layer min-h-screen">
+    <div class="max-w-7xl mx-auto space-y-12">
+        <!-- Profile Header -->
+        <header class="text-center md:text-left space-y-2 pb-6 border-b border-border-light flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
+            <div>
+                <span class="font-label text-[10px] uppercase tracking-[0.4em] text-accent font-bold">@Lang.T("SkyScan Identity")</span>
+                <h1 class="font-headline text-4xl font-extrabold text-text-light">@Model.Name</h1>
+                <p class="text-text-muted text-sm font-light opacity-80">@Lang.T("Premium member profile and curated flight settings.")</p>
+            </div>
+            <div class="flex items-center gap-3">
+                <span class="bg-accent/10 text-accent px-4 py-2 rounded-full font-label text-[10px] uppercase font-bold tracking-widest border border-accent/20">
+                    @Lang.T("SkyScan Member")
+                </span>
+            </div>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+            <!-- Account Details Sidebar (4 cols) -->
+            <section class="lg:col-span-4 space-y-8">
+                <div class="glass-panel p-8 rounded-xl border border-border-light space-y-6">
+                    <h2 class="font-headline text-lg font-bold text-text-light border-b border-border-light pb-3">@Lang.T("Personal Details")</h2>
+                    
+                    <div class="space-y-4">
+                        <div>
+                            <span class="block text-[10px] text-text-muted uppercase tracking-widest mb-1">@Lang.T("Full Name")</span>
+                            <span class="text-text-light font-bold text-sm">@Model.Name</span>
+                        </div>
+                        <div>
+                            <span class="block text-[10px] text-text-muted uppercase tracking-widest mb-1">@Lang.T("Email Address")</span>
+                            <span class="text-text-light font-bold text-sm">@Model.Email</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Two-Factor Authentication Management -->
+                <div class="glass-panel p-8 rounded-xl border border-border-light space-y-6">
+                    <button type="button" onclick="toggleTwoFactor()" class="w-full flex items-center justify-between font-headline text-lg font-bold text-text-light border-b border-border-light pb-3 focus:outline-none text-left cursor-pointer bg-transparent">
+                        <span>@Lang.T("Security & Authenticator")</span>
+                        <span id="twoFactorArrow" class="material-symbols-outlined transition-transform duration-300 transform">expand_more</span>
+                    </button>
+                    
+                    <div id="twoFactorContent" class="hidden space-y-6 transition-all duration-300">
+                        <p class="text-xs text-text-muted leading-relaxed">@Lang.T("Enhance your SkyScan profile security by enabling Two-Factor Authentication (2FA).")</p>
+                        
+                        <div class="flex items-center justify-between py-2">
+                            <span class="text-xs font-bold text-text-light">@Lang.T("2FA Status")</span>
+                            @if (Model.TwoFactorEnabled)
+                            {
+                                <span class="text-[10px] font-bold text-green-400 bg-green-950/20 px-3 py-1 rounded-full border border-green-500/20 uppercase tracking-wider">@Lang.T("Enabled")</span>
+                            }
+                            else
+                            {
+                                <span class="text-[10px] font-bold text-amber-400 bg-amber-950/20 px-3 py-1 rounded-full border border-amber-500/20 uppercase tracking-wider">@Lang.T("Disabled")</span>
+                            }
+                        </div>
+
+                        @if (Model.TwoFactorEnabled)
+                        {
+                            <form asp-controller="Account" asp-action="DisableTwoFactor" method="post">
+                                <button type="submit" class="w-full py-3 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 rounded-xl text-xs font-bold uppercase tracking-widest transition-all">
+                                    @Lang.T("Disable Two-Factor Auth")
+                                </button>
+                            </form>
+                        }
+                        else
+                        {
+                            <a asp-controller="Account" asp-action="EnableTwoFactor" class="block text-center w-full py-3 bg-accent hover:bg-text-light hover:text-background text-background rounded-xl text-xs font-bold uppercase tracking-widest transition-all">
+                                @Lang.T("Set Up Two-Factor Auth")
+                            </a>
+                        }
+                    </div>
+                </div>
+
+                <!-- Reset Password -->
+                <div class="glass-panel p-8 rounded-xl border border-border-light space-y-6">
+                    <button type="button" onclick="toggleResetPassword()" class="w-full flex items-center justify-between font-headline text-lg font-bold text-text-light border-b border-border-light pb-3 focus:outline-none text-left cursor-pointer bg-transparent">
+                        <span>@Lang.T("Reset Password")</span>
+                        <span id="resetPasswordArrow" class="material-symbols-outlined transition-transform duration-300 transform">expand_more</span>
+                    </button>
+                    
+                    <div id="resetPasswordContent" class="hidden space-y-6 transition-all duration-300">
+                        <p class="text-xs text-text-muted leading-relaxed">@Lang.T("Change your login password regularly for safety.")</p>
+
+                        @if (TempData["PasswordSuccess"] != null)
+                        {
+                            <div class="text-green-400 text-xs font-semibold bg-green-950/25 p-3 rounded-lg border border-green-500/25">
+                                @TempData["PasswordSuccess"]
+                            </div>
+                        }
+                        @if (TempData["PasswordError"] != null)
+                        {
+                            <div class="text-red-400 text-xs font-semibold bg-red-950/25 p-3 rounded-lg border border-red-500/25">
+                                @TempData["PasswordError"]
+                            </div>
+                        }
+
+                        <form asp-controller="Account" asp-action="ChangePassword" method="post" class="space-y-4">
+                            <div>
+                                <label class="block text-[10px] text-text-muted uppercase tracking-widest mb-1">@Lang.T("Current Password")</label>
+                                <input name="OldPassword" type="password" required class="w-full bg-surface border border-border-light p-3 rounded-xl text-text-light font-body text-xs focus:border-accent outline-none transition-all" />
+                            </div>
+                            <div>
+                                <label class="block text-[10px] text-text-muted uppercase tracking-widest mb-1">@Lang.T("New Password")</label>
+                                <input name="NewPassword" type="password" required class="w-full bg-surface border border-border-light p-3 rounded-xl text-text-light font-body text-xs focus:border-accent outline-none transition-all" />
+                            </div>
+                            <div>
+                                <label class="block text-[10px] text-text-muted uppercase tracking-widest mb-1">@Lang.T("Confirm New Password")</label>
+                                <input name="ConfirmPassword" type="password" required class="w-full bg-surface border border-border-light p-3 rounded-xl text-text-light font-body text-xs focus:border-accent outline-none transition-all" />
+                            </div>
+                            <button type="submit" class="w-full py-3 bg-accent hover:bg-text-light hover:text-background text-background rounded-xl text-xs font-bold uppercase tracking-widest transition-all cursor-pointer">
+                                @Lang.T("Update Password")
+                            </button>
+                        </form>
+                    </div>
+                </div>
+                <!-- Delete Account -->
+                <div class="glass-panel p-8 rounded-xl border border-border-light space-y-6">
+                    <button type="button" onclick="toggleDeleteAccount()" class="w-full flex items-center justify-between font-headline text-lg font-bold text-red-500 border-b border-border-light pb-3 focus:outline-none text-left cursor-pointer bg-transparent">
+                        <span>@Lang.T("Delete Account")</span>
+                        <span id="deleteAccountArrow" class="material-symbols-outlined transition-transform duration-300 transform">expand_more</span>
+                    </button>
+                    
+                    <div id="deleteAccountContent" class="hidden space-y-6 transition-all duration-300">
+                        <p class="text-xs text-text-muted leading-relaxed">@Lang.T("Are you sure you want to delete your account? This action cannot be undone and your bookings will be purged after 30 days.")</p>
+
+                        @if (TempData["DeleteError"] != null)
+                        {
+                            <div class="text-red-400 text-xs font-semibold bg-red-950/25 p-3 rounded-lg border border-red-500/25">
+                                @TempData["DeleteError"]
+                            </div>
+                        }
+
+                        <form asp-controller="Account" asp-action="DeleteAccount" method="post" class="space-y-4">
+                            <div>
+                                <label class="block text-[10px] text-text-muted uppercase tracking-widest mb-1">@Lang.T("Current Password")</label>
+                                <input name="Password" type="password" required class="w-full bg-surface border border-border-light p-3 rounded-xl text-text-light font-body text-xs focus:border-accent outline-none transition-all" />
+                            </div>
+                            <button type="submit" class="w-full py-3 bg-red-500 hover:bg-red-400 text-background rounded-xl text-xs font-bold uppercase tracking-widest transition-all cursor-pointer">
+                                @Lang.T("Delete My Account")
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Favorites and Search Log Dashboard (8 cols) -->
+            <section class="lg:col-span-8 space-y-8">
+                <!-- Favorites / Price Monitored Routes -->
+                <div class="glass-panel p-8 rounded-xl border border-border-light space-y-6">
+                    <h2 class="font-headline text-lg font-bold text-text-light border-b border-border-light pb-3 flex items-center justify-between">
+                        <span>@Lang.T("Monitored Routes & Favorites")</span>
+                        <span class="text-[10px] bg-accent/10 text-accent px-3 py-1 rounded-full font-bold uppercase">@Model.PriceAlerts.Count @Lang.T("Saved")</span>
+                    </h2>
+
+                    @if (!Model.PriceAlerts.Any())
+                    {
+                        <div class="py-12 text-center space-y-3">
+                            <span class="material-symbols-outlined text-4xl text-text-muted">favorite_border</span>
+                            <p class="text-text-muted text-sm">@Lang.T("No routes saved to favorites yet.")</p>
+                            <p class="text-xs text-text-muted opacity-80">@Lang.T("Favorite flight paths to monitor price changes and save schedules here.")</p>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="space-y-4">
+                            @foreach (var alert in Model.PriceAlerts)
+                            {
+                                var flight = alert.Trip?.Flights?.FirstOrDefault();
+                                if (flight != null)
+                                {
+                                    <div class="p-5 rounded-lg bg-surface border border-border-light flex flex-col md:flex-row justify-between items-center gap-4 hover:border-accent/20 transition-all">
+                                        <div class="flex-1 space-y-2">
+                                            <div class="flex items-center gap-3">
+                                                <span class="text-xs font-bold uppercase tracking-wider text-accent">@flight.FlightNumber</span>
+                                                <span class="text-[10px] text-text-muted">| @flight.Airline?.Name</span>
+                                            </div>
+                                            <div class="flex items-center gap-4 text-sm font-semibold text-text-light">
+                                                <span>@flight.DepartureAirport?.City?.Name (@flight.DepartureAirport?.IataCode)</span>
+                                                <span class="material-symbols-outlined text-xs text-text-muted">arrow_forward</span>
+                                                <span>@flight.ArrivalAirport?.City?.Name (@flight.ArrivalAirport?.IataCode)</span>
+                                            </div>
+                                            <div class="text-[10px] text-text-muted">
+                                                @Lang.T("Departure Date"): @DateTime.Today.ToString("yyyy-MM-dd")
+                                            </div>
+                                        </div>
+                                        <div class="flex items-center gap-6">
+                                            <div class="text-right">
+                                                <span class="block text-[9px] text-text-muted uppercase tracking-widest">@Lang.T("Target Price")</span>
+                                                <span class="text-accent font-bold text-lg">@symbol@((await CurrencyService.ConvertAsync(alert.TargetPrice, currency)).ToString("N0"))</span>
+                                            </div>
+
+                                            <button class="remove-fav-btn text-text-muted hover:text-red-500 transition-colors p-2 cursor-pointer bg-transparent border-none"
+                                                    data-flight-number="@flight.FlightNumber"
+                                                    data-dep-time="@flight.DepartureTime.ToString("o")"
+                                                    title="@Lang.T("Remove from favorites")">
+                                                <span class="material-symbols-outlined">delete</span>
+                                            </button>
+                                        </div>
+                                    </div>
+                                }
+                            }
+                        </div>
+                    }
+                </div>
+
+                <!-- Recent Searches Log -->
+                <div class="glass-panel p-8 rounded-xl border border-border-light space-y-6">
+                    <h2 class="font-headline text-lg font-bold text-text-light border-b border-border-light pb-3">@Lang.T("Your Search History")</h2>
+
+                    @if (!Model.Searches.Any())
+                    {
+                        <p class="text-text-muted text-xs py-4 text-center">@Lang.T("No recent flight searches recorded.")</p>
+                    }
+                    else
+                    {
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-xs border-collapse">
+                                <thead>
+                                    <tr class="border-b border-border-light text-text-muted uppercase tracking-wider font-bold">
+                                        <th class="py-3 px-2">@Lang.T("Date Searched")</th>
+                                        <th class="py-3 px-2">@Lang.T("Route")</th>
+                                        <th class="py-3 px-2">@Lang.T("Departure Date")</th>
+                                        <th class="py-3 px-2">@Lang.T("Trip Type")</th>
+                                        <th class="py-3 px-2"></th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-border-light text-text-light">
+                                    @foreach (var search in Model.Searches.OrderByDescending(s => s.TimeStamp).Take(10))
+                                    {
+                                        <tr class="hover:bg-glass transition-colors">
+                                            <td class="py-4 px-2 text-text-muted">@search.TimeStamp.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</td>
+                                            <td class="py-4 px-2 font-bold">
+                                                @(search.OriginCity?.Name ?? "Unknown") → @(search.DestinationCity?.Name ?? "Unknown")
+                                            </td>
+                                            <td class="py-4 px-2 text-text-muted">@search.DepartureDate.ToString("yyyy-MM-dd")</td>
+                                            <td class="py-4 px-2">
+                                                <span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-glass uppercase">
+                                                    @Lang.T(search.Type.ToString())
+                                                </span>
+                                            </td>
+                                            <td class="py-4 px-2 text-right">
+                                                <a href="/Flight/Results?origin=@search.OriginCityId&destination=@search.DestinationCityId&date=@search.DepartureDate.ToString("yyyy-MM-dd")&tripType=@search.Type" 
+                                                   class="text-accent hover:text-text-light font-bold uppercase text-[10px] tracking-wider transition-colors">
+                                                    @Lang.T("Search Again")
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                </div>
+            </section>
+        </div>
+    </div>
+</main>
+
+@section Scripts {
+    <script>
+        document.querySelectorAll('.remove-fav-btn').forEach(btn => {
+            btn.addEventListener('click', async (e) => {
+                e.preventDefault();
+                const formData = new FormData();
+                formData.append('flightNumber', btn.dataset.flightNumber);
+                formData.append('departureTime', btn.dataset.depTime);
+
+                try {
+                    const response = await fetch('/Flight/ToggleFavorite', {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    if (response.ok) {
+                        // Reload the page to refresh favorites list
+                        window.location.reload();
+                    } else {
+                        alert("Could not remove favorite. Please try again.");
+                    }
+                } catch (err) {
+                    console.error(err);
+                    alert("An error occurred. Please try again.");
+                }
+            });
+        });
+
+        function toggleResetPassword() {
+            const content = document.getElementById('resetPasswordContent');
+            const arrow = document.getElementById('resetPasswordArrow');
+            if (content.classList.contains('hidden')) {
+                content.classList.remove('hidden');
+                arrow.classList.add('rotate-180');
+            } else {
+                content.classList.add('hidden');
+                arrow.classList.remove('rotate-180');
+            }
+        }
+
+        function toggleTwoFactor() {
+            const content = document.getElementById('twoFactorContent');
+            const arrow = document.getElementById('twoFactorArrow');
+            if (content.classList.contains('hidden')) {
+                content.classList.remove('hidden');
+                arrow.classList.add('rotate-180');
+            } else {
+                content.classList.add('hidden');
+                arrow.classList.remove('rotate-180');
+            }
+        }
+
+        function toggleDeleteAccount() {
+            const content = document.getElementById('deleteAccountContent');
+            const arrow = document.getElementById('deleteAccountArrow');
+            if (content.classList.contains('hidden')) {
+                content.classList.remove('hidden');
+                arrow.classList.add('rotate-180');
+            } else {
+                content.classList.add('hidden');
+                arrow.classList.remove('rotate-180');
+            }
+        }
+
+        // Auto-expand if there is an active feedback message
+        @if (TempData["PasswordSuccess"] != null || TempData["PasswordError"] != null)
+        {
+            <text>
+            toggleResetPassword();
+            </text>
+        }
+        @if (TempData["DeleteError"] != null)
+        {
+            <text>
+            toggleDeleteAccount();
+            </text>
+        }
+    </script>
+}
